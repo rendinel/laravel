@@ -1,0 +1,150 @@
+1-Creo Progetto
+composer create-project --prefer-dist laravel/laravel:^8.2.0  wine
+
+2-Installo Tailwind
+
+npm install
+npm audit fix
+composer require laravel-frontend-presets/tailwindcss --dev
+php artisan ui tailwindcss
+npm install 
+npm audit fix
+npm run dev
+
+3-Creo controller con metodi giá inclusi
+
+php artisan make:controller WinesController --resource
+
+4-Creo Model con migrations per table principale
+
+php artisan make:model Wine -m
+
+5-Creo Model per table secondaria
+
+php artisan make:model WineModel
+
+6-Dentro view creo cartella layouts dove inserisco app.blade.php
+
+7-Dentro view creo cartella wine dove inserisco le blade associate ai metodi del controller ergo index,create,edit,show tutte blade.php
+
+8-Dentro web.php chiamo semplicemente il controller che uso sia importandolo sia  chiamando dentro resource
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WinesController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::resource('/',WinesController::class);
+
+9-Dentro migrations creo le tue table con le varie righe
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateWinesTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('wines', function (Blueprint $table) { prime virgolette nome table che creo
+            $table->increments('id');
+            $table->string('name');
+            $table->integer('founded');
+            $table->longText('description');
+            $table->timestamps();
+        });
+
+        Schema::create('wines_models', function (Blueprint $table) { prime virgolette nome table che creo
+            $table->increments('id');
+            $table->unsignedInteger('wine_id');
+            $table->string('wine_name');
+            $table->timestamps();
+            $table->foreign('wine_id') qui creo il collegamento tra le 2 table dicendo che wine id corrisponde a id su table wines ed é eliminabile
+                   ->references('id')
+                   ->on('wines')
+                   ->onDelete('cascade');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('wines');
+    }
+}
+
+Fatto ció lancio php artisan migrate
+
+10-Dentro wine.model definisco che interagisce con la table wines, che la sua id  é la sua primarykey ,che righe sono riempibili dall'utente e tramite la funzione wineModels
+e il metodo hasMany ritorna il model WineModel della seconda table
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Wine extends Model
+{
+    use HasFactory;
+
+    public $table = 'wines';
+
+    public $primaryKey = 'id';
+
+    protected $fillable = ['name', 'founded', 'description'];
+
+    public function wineModels()
+    {
+        return $this->hasMany(WineModel::class);
+    }
+}
+
+11-Dentro wineModel definisco con che table interagisco , la sua primary key e che con la funzione wine e il metodo belongsto ritorna il model della tabellaprincipale ovvero Wine
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class WineModel extends Model
+{
+    use HasFactory;
+
+    public $table = 'wines_models';
+
+    public $primaryKey = 'id';
+
+    
+    public function wine()
+    {
+        return $this->belongsTo(Wine::class);
+    }
+}
+
+12-

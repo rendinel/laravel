@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Car;
+use App\Models\Headquarter;
+use App\Rules\Uppercase;
+use App\Http\Requests\CreateValidationRequest;
 
 class CarsController extends Controller
 {
@@ -12,8 +16,17 @@ class CarsController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        return view('cars.index');
+    {   
+        // query pagination
+        // $cars = DB::table('cars')->paginate(4);
+
+        // cars all mostra tutti su pagina singola
+        // $cars = Car::all();
+        $cars = Car::paginate(3);
+        
+        return view('cars.index', [
+            'cars' => $cars
+        ]);
     }
 
     /**
@@ -23,7 +36,7 @@ class CarsController extends Controller
      */
     public function create()
     {
-        //
+        return view('cars.create');
     }
 
     /**
@@ -34,7 +47,80 @@ class CarsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // $car = new Car;
+        // $car->name = $request->input('name');
+        // $car->founded = $request->input('founded');
+        // $car->description = $request->input('description');
+        // $car->save();
+
+        // $test = $request->only(['_token','name']);
+        // $test = $request->except(['_token','name']);
+
+        // $test = $request->has('founded');
+
+        // if($request->has('founded')) {
+        //     dd('Founded has been found!');
+        // }
+
+        // dd($request->path());
+        // if($request->is('cars')) {
+        //     dd('endpoint is cars!');
+        // }
+
+        // if($request->method('post'))
+        // {
+        //     dd('Method is post!');
+        // }
+
+        // dd($request->url());
+
+        // dd($request->ip());
+        // dd($test);
+
+        // $request->validate([
+        //     'name' => 'required|unique:cars',
+        //     'founded' => 'required|integer|min:0|max:2021',
+        //     'description' => 'required'
+        // ]);
+
+        // validation personalizzata con uppercase
+
+        // $request->validate([
+        //     'name' => new Uppercase,
+        //     'founded' => 'required|integer|min:0|max:2021',
+        //     'description' => 'required'
+        // ]);
+
+        // $request->validated();
+
+
+        // $request->validate([
+        //     'name' => 'required',
+        //     'founded' => 'required|integer|min:0|max:2021',
+        //     'description' => 'required',
+        //     'image' => 'required|mimes:jpg,png,jpeg|max:5048'
+        // ]);
+
+        // $newImageName = time() . '-' . $request->name . '.' . $request->image->extension();
+        
+        // $request->image->move(public_path('images'),$newImageName);        
+
+        // dd($newImageName);
+
+        $request->validate([
+            'name' => 'required',
+            'founded' => 'required|integer|min:0|max:2021',
+            'description' => 'required'
+        ]);
+
+        $car = Car::create([
+            'name' => $request->input('name'),
+            'founded' => $request->input('founded'),
+            'description' => $request->input('description'),
+            'image_path' =>  $newImageName
+        ]);
+
+        return redirect('/cars');
     }
 
     /**
@@ -45,7 +131,13 @@ class CarsController extends Controller
      */
     public function show($id)
     {
-        //
+        $car = Car::find($id);
+
+        // $hq = $car->headquarter;
+
+        $hq = Headquarter::find($id);
+
+        return view('cars.show')->with('car',$car);
     }
 
     /**
@@ -56,7 +148,9 @@ class CarsController extends Controller
      */
     public function edit($id)
     {
-        //
+        $car = Car::find($id)->first();
+
+        return view('cars.edit')->with('car', $car);
     }
 
     /**
@@ -66,9 +160,24 @@ class CarsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CreateValidationRequest $request, $id)
     {
-        //
+
+        // $request->validate([
+        //     'name' => new Uppercase,
+        //     'founded' => 'required|integer|min:0|max:2021',
+        //     'description' => 'required'
+        // ]);
+
+        $request->validated();
+
+        $car = Car::where('id',$id)->update([
+            'name' => $request->input('name'),
+            'founded' => $request->input('founded'),
+            'description' => $request->input('description')
+        ]);
+
+        return redirect('/cars');
     }
 
     /**
@@ -77,8 +186,19 @@ class CarsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    // public function destroy($id)
+    // {
+    //     $car = Car::find($id)->first();
+
+    //     $car->delete();
+
+    //     return redirect('/cars');
+    // }
+
+    public function destroy(Car $car)
     {
-        //
+        $car->delete();
+
+        return redirect('/cars');
     }
 }
